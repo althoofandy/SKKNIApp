@@ -278,7 +278,7 @@
                         android:background="@drawable/bg_stat_pill"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"
+                        android:foreground="@drawable/ripple_stat_pill"
                         android:gravity="center"
                         android:orientation="vertical"
                         android:paddingVertical="12dp">
