@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">SKKNI App</string>
+    <string name="weather_title">Cuaca Lokasi Saya</string>
+    <string name="weather_title_city">Cuaca di %1$s</string>
+    <string name="action_get_weather">Cek Cuaca</string>
+    <string name="action_refresh">Refresh Lokasi</string>
+    <string name="action_back_to_my_location">Lihat Lokasi Saya</string>
+    <string name="permission_required">Izin lokasi dibutuhkan untuk mengambil cuaca lokasi kamu</string>
+    <string name="other_cities_title">Kota Favorit</string>
+    <string name="other_cities_hint">Ketuk untuk lihat cuacanya</string>
+    <string name="search_city_hint">Cari kota di seluruh dunia…</string>
+    <string name="forecast_7_days_title">Prakiraan 7 Hari</string>
+    <string name="city_added">Kota ditambahkan ke favorit</string>
+    <string name="city_removed">Kota dihapus dari favorit</string>
+    <string name="hourly_forecast_subtitle">Perkiraan suhu &amp; peluang hujan per jam</string>
+    <string name="hourly_forecast_title">Prakiraan per Jam</string>
+    <string name="forecast_show_all">Lihat 7 Hari</string>
+    <string name="forecast_show_less">Tutup</string>
+</resources>
