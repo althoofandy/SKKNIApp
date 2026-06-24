@@ -1,6 +1,8 @@
 package com.example.skkniapp.di
 
+import com.example.skkniapp.core.AppConstants
 import com.example.skkniapp.data.remote.GeocodingApiService
+import com.example.skkniapp.data.remote.ReverseGeocodingApiService
 import com.example.skkniapp.data.remote.WeatherApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -9,11 +11,9 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-private const val FORECAST_BASE_URL = "https://api.open-meteo.com/"
-private const val GEOCODING_BASE_URL = "https://geocoding-api.open-meteo.com/"
-
 val FORECAST_RETROFIT = named("forecastRetrofit")
 val GEOCODING_RETROFIT = named("geocodingRetrofit")
+val REVERSE_GEOCODING_RETROFIT = named("reverseGeocodingRetrofit")
 
 val networkModule = module {
 
@@ -31,7 +31,7 @@ val networkModule = module {
 
     single(FORECAST_RETROFIT) {
         Retrofit.Builder()
-            .baseUrl(FORECAST_BASE_URL)
+            .baseUrl(AppConstants.FORECAST_BASE_URL)
             .client(get())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -39,7 +39,15 @@ val networkModule = module {
 
     single(GEOCODING_RETROFIT) {
         Retrofit.Builder()
-            .baseUrl(GEOCODING_BASE_URL)
+            .baseUrl(AppConstants.GEOCODING_BASE_URL)
+            .client(get())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    single(REVERSE_GEOCODING_RETROFIT) {
+        Retrofit.Builder()
+            .baseUrl(AppConstants.REVERSE_GEOCODING_BASE_URL)
             .client(get())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -51,5 +59,9 @@ val networkModule = module {
 
     single {
         get<Retrofit>(GEOCODING_RETROFIT).create(GeocodingApiService::class.java)
+    }
+
+    single {
+        get<Retrofit>(REVERSE_GEOCODING_RETROFIT).create(ReverseGeocodingApiService::class.java)
     }
 }

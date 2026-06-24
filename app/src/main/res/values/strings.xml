@@ -16,4 +16,23 @@
     <string name="hourly_forecast_title">Prakiraan per Jam</string>
     <string name="forecast_show_all">Lihat 7 Hari</string>
     <string name="forecast_show_less">Tutup</string>
+    <string name="error_icon">⚠️</string>
+    <string name="action_retry">Coba Lagi</string>
+    <string name="weather_error_default">Gagal memuat cuaca. Periksa koneksi internet kamu.</string>
+    <string name="forecast_error_message">Gagal memuat prakiraan cuaca</string>
+    <string name="favorites_empty_message">Belum ada kota favorit. Cari kota di atas untuk menambahkan.</string>
+    <string name="favorites_error_message">Gagal memuat kota favorit.</string>
+    <string name="compass_title">Kompas Arah Angin</string>
+    <string name="compass_north">N</string>
+    <string name="compass_east">E</string>
+    <string name="compass_south">S</string>
+    <string name="compass_west">W</string>
+    <string name="compass_hint">Putar HP kamu untuk melihat arah sebenarnya</string>
+    <string name="compass_wind_info">Angin dari %1$s · %2$s</string>
+    <string name="action_wind_compass">Lihat Kompas</string>
+    <string name="compass_sensor_unavailable">Sensor kompas tidak tersedia di perangkat ini</string>
+    <string name="shake_refresh_triggered">Goyangan terdeteksi, memuat ulang cuaca…</string>
+    <string name="stat_feels_like_label">Terasa</string>
+    <string name="stat_humidity_label">Lembap</string>
+    <string name="stat_wind_label">Angin 🧭</string>
 </resources>

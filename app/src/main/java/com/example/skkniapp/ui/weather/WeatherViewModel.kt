@@ -2,14 +2,10 @@ package com.example.skkniapp.ui.weather
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.skkniapp.core.AppConstants
 import com.example.skkniapp.core.Resource
-import com.example.skkniapp.data.location.LocationProvider
 import com.example.skkniapp.domain.model.CityLocation
-import com.example.skkniapp.domain.usecase.AddFavoriteCityUseCase
-import com.example.skkniapp.domain.usecase.GetCurrentWeatherUseCase
-import com.example.skkniapp.domain.usecase.GetOtherCitiesWeatherUseCase
-import com.example.skkniapp.domain.usecase.RemoveFavoriteCityUseCase
-import com.example.skkniapp.domain.usecase.SearchCityUseCase
+import com.example.skkniapp.domain.usecase.WeatherDashboardUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,12 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class WeatherViewModel(
-    private val getCurrentWeatherUseCase: GetCurrentWeatherUseCase,
-    private val getOtherCitiesWeatherUseCase: GetOtherCitiesWeatherUseCase,
-    private val searchCityUseCase: SearchCityUseCase,
-    private val addFavoriteCityUseCase: AddFavoriteCityUseCase,
-    private val removeFavoriteCityUseCase: RemoveFavoriteCityUseCase,
-    private val locationProvider: LocationProvider
+    private val weatherDashboardUseCase: WeatherDashboardUseCase
 ) : ViewModel() {
 
     private val _weatherState = MutableStateFlow<Resource<WeatherUiModel>>(Resource.Loading)
@@ -50,9 +41,8 @@ class WeatherViewModel(
         viewModelScope.launch {
             _weatherState.value = Resource.Loading
             runCatching {
-                val location = locationProvider.getCurrentLocation()
-                    ?: error("Lokasi tidak ditemukan, pastikan GPS aktif")
-                getCurrentWeatherUseCase(location.latitude, location.longitude).toUiModel("Lokasi Saya")
+                val result = weatherDashboardUseCase.loadCurrentLocationWeather()
+                result.weather.toUiModel(AppConstants.CURRENT_LOCATION_LABEL, result.placeName)
             }.onSuccess { uiModel ->
                 _weatherState.value = Resource.Success(uiModel)
             }.onFailure { throwable ->
@@ -66,7 +56,7 @@ class WeatherViewModel(
         viewModelScope.launch {
             _weatherState.value = Resource.Loading
             runCatching {
-                getCurrentWeatherUseCase(latitude, longitude).toUiModel(cityName)
+                weatherDashboardUseCase.loadWeatherForCity(latitude, longitude).toUiModel(cityName)
             }.onSuccess { uiModel ->
                 _weatherState.value = Resource.Success(uiModel)
             }.onFailure { throwable ->
@@ -79,7 +69,7 @@ class WeatherViewModel(
         viewModelScope.launch {
             _otherCitiesState.value = Resource.Loading
             runCatching {
-                getOtherCitiesWeatherUseCase().map { it.toUiModel() }
+                weatherDashboardUseCase.loadFavoriteCitiesWeather().map { it.toUiModel() }
             }.onSuccess { uiModels ->
                 _otherCitiesState.value = Resource.Success(uiModels)
             }.onFailure { throwable ->
@@ -95,10 +85,10 @@ class WeatherViewModel(
             return
         }
         searchJob = viewModelScope.launch {
-            delay(400)
+            delay(AppConstants.SEARCH_DEBOUNCE_MS)
             _searchResultsState.value = Resource.Loading
             runCatching {
-                searchCityUseCase(query).map { it.toUiModel() }
+                weatherDashboardUseCase.searchCity(query).map { it.toUiModel() }
             }.onSuccess { results ->
                 _searchResultsState.value = Resource.Success(results)
             }.onFailure { throwable ->
@@ -123,7 +113,7 @@ class WeatherViewModel(
         _otherCitiesState.update { Resource.Success(currentList + newItem) }
 
         viewModelScope.launch {
-            addFavoriteCityUseCase(CityLocation(cityName, latitude, longitude))
+            weatherDashboardUseCase.addFavoriteCity(CityLocation(cityName, latitude, longitude))
         }
     }
 
@@ -132,7 +122,7 @@ class WeatherViewModel(
         _otherCitiesState.update { Resource.Success(currentList.filterNot { it.cityName == cityName }) }
 
         viewModelScope.launch {
-            removeFavoriteCityUseCase(cityName)
+            weatherDashboardUseCase.removeFavoriteCity(cityName)
         }
     }
 }

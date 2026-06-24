@@ -10,17 +10,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.ScrollView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.example.skkniapp.R
+import com.example.skkniapp.core.AppConstants
 import com.example.skkniapp.core.Resource
+import com.example.skkniapp.data.sensor.ShakeDetector
 import com.example.skkniapp.databinding.FragmentWeatherBinding
 import com.example.skkniapp.databinding.ItemDailyForecastBinding
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -35,9 +38,7 @@ class WeatherFragment : Fragment() {
     private var currentWeatherUiModel: WeatherUiModel? = null
     private var isForecastExpanded = false
 
-    private companion object {
-        const val COLLAPSED_FORECAST_DAYS = 3
-    }
+    private var shakeDetector: ShakeDetector? = null
 
     private val cityWeatherAdapter = CityWeatherAdapter(
         onClick = { city ->
@@ -61,7 +62,7 @@ class WeatherFragment : Fragment() {
         if (granted) {
             viewModel.loadWeatherForCurrentLocation()
         } else {
-            Toast.makeText(requireContext(), getString(R.string.permission_required), Toast.LENGTH_LONG).show()
+            Snackbar.make(binding.root, getString(R.string.permission_required), Snackbar.LENGTH_LONG).show()
         }
     }
 
@@ -76,6 +77,11 @@ class WeatherFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        shakeDetector = ShakeDetector(requireContext()) {
+            retryWeather()
+            Snackbar.make(binding.root, getString(R.string.shake_refresh_triggered), Snackbar.LENGTH_SHORT).show()
+        }
 
         binding.rvOtherCities.adapter = cityWeatherAdapter
         binding.rvSearchResults.adapter = citySearchAdapter
@@ -93,6 +99,18 @@ class WeatherFragment : Fragment() {
             currentWeatherUiModel?.let { uiModel ->
                 bindDailyForecast(uiModel.dailyForecast, uiModel.hourlyForecast)
             }
+        }
+
+        binding.btnRetryWeather.setOnClickListener {
+            retryWeather()
+        }
+
+        binding.statWind.setOnClickListener {
+            openWindCompass()
+        }
+
+        binding.btnRetryFavorites.setOnClickListener {
+            viewModel.loadOtherCitiesWeather()
         }
 
         binding.etSearchCity.addTextChangedListener(object : TextWatcher {
@@ -113,6 +131,28 @@ class WeatherFragment : Fragment() {
         }
 
         requestLocationAndLoadWeather()
+    }
+
+    private fun openWindCompass() {
+        val uiModel = currentWeatherUiModel ?: return
+        val cityName = viewModel.selectedCityName.value ?: getString(R.string.weather_title)
+        val args = com.example.skkniapp.ui.compass.CompassFragment.newArgs(
+            windDirectionDegrees = uiModel.windDirectionDegrees,
+            windDirectionLabel = uiModel.windDirectionLabel,
+            windSpeedLabel = uiModel.windSpeedLabel,
+            cityName = cityName
+        )
+        findNavController().navigate(R.id.compassFragment, args)
+    }
+
+    private fun retryWeather() {
+        val cityName = viewModel.selectedCityName.value
+        val latLng = selectedCityLatLng
+        if (cityName != null && latLng != null) {
+            viewModel.selectCity(cityName, latLng.first, latLng.second)
+        } else {
+            requestLocationAndLoadWeather()
+        }
     }
 
     private fun requestLocationAndLoadWeather() {
@@ -146,21 +186,26 @@ class WeatherFragment : Fragment() {
         when (state) {
             is Resource.Loading -> {
                 binding.groupWeatherContent.visibility = View.GONE
+                binding.layoutWeatherError.visibility = View.GONE
+                binding.tvLocationDetail.visibility = View.GONE
                 binding.btnFavorite.visibility = View.GONE
                 shimmer.visibility = View.VISIBLE
                 shimmer.startShimmer()
 
                 binding.groupForecastContent.visibility = View.GONE
+                binding.tvForecastError.visibility = View.GONE
                 forecastShimmer.visibility = View.VISIBLE
                 forecastShimmer.startShimmer()
             }
             is Resource.Success -> {
                 shimmer.stopShimmer()
                 shimmer.visibility = View.GONE
+                binding.layoutWeatherError.visibility = View.GONE
                 binding.groupWeatherContent.visibility = View.VISIBLE
 
                 forecastShimmer.stopShimmer()
                 forecastShimmer.visibility = View.GONE
+                binding.tvForecastError.visibility = View.GONE
                 binding.groupForecastContent.visibility = View.VISIBLE
 
                 bindWeather(state.data)
@@ -169,14 +214,19 @@ class WeatherFragment : Fragment() {
             is Resource.Error -> {
                 shimmer.stopShimmer()
                 shimmer.visibility = View.GONE
-                binding.groupWeatherContent.visibility = View.VISIBLE
+                binding.groupWeatherContent.visibility = View.GONE
+                binding.tvLocationDetail.visibility = View.GONE
+                binding.layoutWeatherError.visibility = View.VISIBLE
+                binding.tvWeatherErrorMessage.text = state.message.ifBlank {
+                    getString(R.string.weather_error_default)
+                }
 
                 forecastShimmer.stopShimmer()
                 forecastShimmer.visibility = View.GONE
                 binding.groupForecastContent.visibility = View.GONE
+                binding.tvForecastError.visibility = View.VISIBLE
 
-                updateFavoriteStarIcon()
-                Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+                binding.btnFavorite.visibility = View.GONE
             }
         }
     }
@@ -186,21 +236,36 @@ class WeatherFragment : Fragment() {
         when (state) {
             is Resource.Loading -> {
                 binding.rvOtherCities.visibility = View.GONE
+                binding.tvFavoritesEmpty.visibility = View.GONE
+                binding.tvOtherCitiesHint.visibility = View.GONE
+                binding.layoutFavoritesError.visibility = View.GONE
                 shimmer.visibility = View.VISIBLE
                 shimmer.startShimmer()
             }
             is Resource.Success -> {
                 shimmer.stopShimmer()
                 shimmer.visibility = View.GONE
-                binding.rvOtherCities.visibility = View.VISIBLE
-                cityWeatherAdapter.submitList(state.data)
+                binding.layoutFavoritesError.visibility = View.GONE
+
+                if (state.data.isEmpty()) {
+                    binding.rvOtherCities.visibility = View.GONE
+                    binding.tvFavoritesEmpty.visibility = View.VISIBLE
+                    binding.tvOtherCitiesHint.visibility = View.GONE
+                } else {
+                    binding.tvFavoritesEmpty.visibility = View.GONE
+                    binding.rvOtherCities.visibility = View.VISIBLE
+                    binding.tvOtherCitiesHint.visibility = View.VISIBLE
+                    cityWeatherAdapter.submitList(state.data)
+                }
                 updateFavoriteStarIcon()
             }
             is Resource.Error -> {
                 shimmer.stopShimmer()
                 shimmer.visibility = View.GONE
-                binding.rvOtherCities.visibility = View.VISIBLE
-                Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+                binding.rvOtherCities.visibility = View.GONE
+                binding.tvFavoritesEmpty.visibility = View.GONE
+                binding.tvOtherCitiesHint.visibility = View.GONE
+                binding.layoutFavoritesError.visibility = View.VISIBLE
             }
         }
     }
@@ -214,7 +279,7 @@ class WeatherFragment : Fragment() {
             }
             is Resource.Error -> {
                 binding.rvSearchResults.visibility = View.GONE
-                Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, state.message, Snackbar.LENGTH_SHORT).show()
             }
         }
     }
@@ -249,7 +314,7 @@ class WeatherFragment : Fragment() {
         val latLng = selectedCityLatLng ?: return
         if (viewModel.isCityFavorited(cityName)) {
             viewModel.removeCityFromFavorites(cityName)
-            Toast.makeText(requireContext(), getString(R.string.city_removed), Toast.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, getString(R.string.city_removed), Snackbar.LENGTH_SHORT).show()
         } else {
             val weather = currentWeatherUiModel
             viewModel.addCityToFavorites(
@@ -259,7 +324,7 @@ class WeatherFragment : Fragment() {
                 weather?.temperatureLabel.orEmpty(),
                 weather?.emoji.orEmpty()
             )
-            Toast.makeText(requireContext(), getString(R.string.city_added), Toast.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, getString(R.string.city_added), Snackbar.LENGTH_SHORT).show()
         }
         updateFavoriteStarIcon()
     }
@@ -267,6 +332,12 @@ class WeatherFragment : Fragment() {
     private fun bindWeather(uiModel: WeatherUiModel) {
         currentWeatherUiModel = uiModel
         binding.tvCardCityName.text = uiModel.cityName
+        if (uiModel.locationDetailLabel.isNullOrBlank()) {
+            binding.tvLocationDetail.visibility = View.GONE
+        } else {
+            binding.tvLocationDetail.visibility = View.VISIBLE
+            binding.tvLocationDetail.text = uiModel.locationDetailLabel
+        }
         binding.tvWeatherEmoji.text = uiModel.emoji
         binding.tvTemperature.text = uiModel.temperatureLabel
         binding.tvDescription.text = uiModel.description
@@ -278,8 +349,8 @@ class WeatherFragment : Fragment() {
 
     private fun bindDailyForecast(items: List<DailyForecastUiModel>, hourlyForecast: List<HourlyForecastUiModel>) {
         binding.tvForecastToggle.animate()
-            .rotation(if (isForecastExpanded) 180f else 0f)
-            .setDuration(200)
+            .rotation(if (isForecastExpanded) AppConstants.CHEVRON_ROTATED_DEGREES else AppConstants.CHEVRON_DEFAULT_DEGREES)
+            .setDuration(AppConstants.FORECAST_TOGGLE_ANIMATION_MS)
             .start()
         binding.tvForecastToggle.contentDescription = if (isForecastExpanded) {
             getString(R.string.forecast_show_less)
@@ -287,7 +358,7 @@ class WeatherFragment : Fragment() {
             getString(R.string.forecast_show_all)
         }
 
-        val visibleItems = if (isForecastExpanded) items else items.take(COLLAPSED_FORECAST_DAYS)
+        val visibleItems = if (isForecastExpanded) items else items.take(AppConstants.COLLAPSED_FORECAST_DAYS)
 
         binding.llDailyForecast.removeAllViews()
         visibleItems.forEach { item ->
@@ -327,8 +398,19 @@ class WeatherFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        shakeDetector?.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        shakeDetector?.stop()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        shakeDetector = null
         _binding = null
     }
 }

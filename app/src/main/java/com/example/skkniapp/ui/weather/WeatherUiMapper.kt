@@ -5,17 +5,21 @@ import com.example.skkniapp.domain.model.DailyForecastDomain
 import com.example.skkniapp.domain.model.HourlyForecastDomain
 import com.example.skkniapp.domain.model.WeatherDomain
 import com.example.skkniapp.domain.util.WeatherCodeMapper
+import com.example.skkniapp.domain.util.WindDirectionMapper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-fun WeatherDomain.toUiModel(cityName: String): WeatherUiModel {
+fun WeatherDomain.toUiModel(cityName: String, locationDetailLabel: String? = null): WeatherUiModel {
     return WeatherUiModel(
         cityName = cityName,
+        locationDetailLabel = locationDetailLabel,
         temperatureLabel = "${temperature.toInt()}°C",
         feelsLikeLabel = "${feelsLike.toInt()}°C",
         humidityLabel = "${humidity}%",
         windSpeedLabel = "${windSpeed} m/s",
+        windDirectionDegrees = windDirection.toFloat(),
+        windDirectionLabel = WindDirectionMapper.toLabel(windDirection),
         description = description,
         emoji = WeatherCodeMapper.toEmoji(weatherCode),
         dailyForecast = dailyForecast.map { it.toUiModel() },

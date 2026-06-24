@@ -5,6 +5,7 @@ data class WeatherDomain(
     val feelsLike: Double,
     val humidity: Int,
     val windSpeed: Double,
+    val windDirection: Double,
     val weatherCode: Int,
     val description: String,
     val dailyForecast: List<DailyForecastDomain>,

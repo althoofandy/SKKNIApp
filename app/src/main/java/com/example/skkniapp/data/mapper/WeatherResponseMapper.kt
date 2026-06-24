@@ -31,6 +31,7 @@ fun WeatherResponse.toDomain(): WeatherDomain {
         feelsLike = current.feelsLike,
         humidity = current.humidity,
         windSpeed = current.windSpeed,
+        windDirection = current.windDirection,
         weatherCode = current.weatherCode,
         description = WeatherCodeMapper.toDescription(current.weatherCode),
         dailyForecast = forecast,
