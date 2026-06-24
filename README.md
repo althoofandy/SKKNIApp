@@ -7,10 +7,10 @@ An Android weather application (Kotlin) with automatic location-based weather, c
 - [Features](#features)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
-- [Database Schema](#database-schema)
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
 - [Implementation Notes](#implementation-notes)
+- [Deep-Dive Docs](#deep-dive-docs)
 
 ## Features
 
@@ -20,8 +20,9 @@ An Android weather application (Kotlin) with automatic location-based weather, c
 - View Binding for all layouts (no `findViewById`), Koin for dependency injection across modules.
 
 ### Data Persistence
-- Favorite cities are persisted locally with **Room** (SQLite) so they survive app restarts — see [Database Schema](#database-schema).
+- Favorite cities are persisted locally with **Room** (SQLite) so they survive app restarts.
 - Remote weather/geocoding data is fetched on demand via Retrofit and mapped into immutable domain models; no remote data is cached beyond the favorites table.
+- 📄 **Full schema, entity/DAO code, and migration policy: [`docs/DATABASE.md`](docs/DATABASE.md)**
 
 ### Location-Based Service & Navigation
 - Current-location weather using **Google Play Services Location** (`FusedLocationProviderClient`), requested through the runtime `ACCESS_FINE_LOCATION` permission flow.
@@ -35,19 +36,20 @@ An Android weather application (Kotlin) with automatic location-based weather, c
 - Expandable daily forecast list and a per-day hourly forecast `BottomSheetDialogFragment`.
 
 ### Mobile Security Fundamentals
-- `android:allowBackup="false"` to prevent app data (including the favorites database) from being extracted via ADB backup.
-- Runtime permission requests (location) instead of install-time-only permissions; the app degrades gracefully (Snackbar message) if permission is denied.
-- All network calls go over HTTPS to public, key-less weather/geocoding APIs — no credentials or secrets are stored in the app.
-- `MainActivity` is exported only for the launcher intent, with `singleInstance` launch mode and an empty `taskAffinity` to avoid task-hijacking.
+- `android:allowBackup="false"`, runtime location permission, HTTPS-only networking, and `singleInstance`/empty-`taskAffinity` hardening on `MainActivity`.
+- **Runtime Application Self-Protection (RASP)** via [freeRASP](https://docs.talsec.app/freerasp) (Talsec): root/jailbreak, emulator, debugger, hooking frameworks (Frida/Xposed), tampering, untrusted install sources, multi-instance, malware, unlocked bootloader, dev mode, ADB.
+- 📄 **Full integration code, Gradle/repo setup, and pre-release checklist: [`docs/SECURITY.md`](docs/SECURITY.md)**
 
 ### Mobile Sensors
-- Shake-to-refresh implemented via `ShakeDetector`, which listens to the `TYPE_ACCELEROMETER` sensor, applies a magnitude threshold (`SHAKE_THRESHOLD_G`) and a debounce/cooldown window to avoid false positives, then triggers a weather refresh with haptic Snackbar feedback.
-- The wind-compass screen visualizes the device's wind-direction reading with a smoothed (low-pass filtered) rotation animation.
+- Shake-to-refresh via the accelerometer (`ShakeDetector`), with a magnitude threshold and debounce/cooldown window to avoid false positives.
+- Wind-compass screen combining accelerometer + magnetometer readings with a low-pass-filtered rotation animation.
+- 📄 **Full sensor code and tuning constants: [`docs/SENSORS.md`](docs/SENSORS.md)**
 
 ### Mobile Network
-- All HTTP calls use **Retrofit2** + **OkHttp** (with a `HttpLoggingInterceptor` for debugging) over a cellular/Wi-Fi data connection.
-- Network responses are parsed with Gson and mapped through dedicated mapper classes (`WeatherResponseMapper`, `GeocodingResponseMapper`) before reaching the UI layer, isolating the rest of the app from the wire format.
+- All HTTP calls use **Retrofit2** + **OkHttp** (with a `HttpLoggingInterceptor` for debugging).
+- Responses parsed with Gson and mapped through dedicated mapper classes before reaching the UI layer.
 - Network/API failures surface as a typed `UiState.Error` so the UI can show a retry affordance instead of crashing.
+- 📄 **Full API client, Retrofit/OkHttp wiring, and error handling: [`docs/NETWORK.md`](docs/NETWORK.md)**
 
 ## Architecture
 
@@ -74,6 +76,7 @@ The codebase is split into 4 Gradle modules following clean-architecture layerin
 :app       (UI layer — fragments, view models, adapters)
   ├─ ui/weather/   WeatherFragment, WeatherViewModel, adapters & UI models
   ├─ ui/compass/   CompassFragment
+  ├─ security/     RaspGuard (freeRASP integration)
   ├─ di/ViewModelModule.kt
   └─ res/          single shared resource pool (layouts, drawables, strings)
   depends on → :domain, :data, :core
@@ -95,42 +98,9 @@ The codebase is split into 4 Gradle modules following clean-architecture layerin
 | Location | Google Play Services Location |
 | Loading Placeholder | Facebook Shimmer |
 | Navigation | AndroidX Navigation (fragment + UI) |
+| App Security (RASP) | [freeRASP](https://docs.talsec.app/freerasp) — `TalsecSecurity-Community` |
 
-Weather and geocoding data is sourced from the free, key-less [Open-Meteo API](https://open-meteo.com/) (forecast + geocoding) and [BigDataCloud](https://www.bigdatacloud.com/) (reverse geocoding), accessed through `WeatherApiService` in the `:data` module.
-
-## Database Schema
-
-The app uses a single Room database (`skkni_room.db`, version 1) to persist the user's favorite cities.
-
-```
-┌──────────────────────────────┐
-│       favorite_city          │
-├──────────────┬───────────────┤
-│ id            │ INTEGER, PK, AUTOINCREMENT │
-│ name          │ TEXT, UNIQUE INDEX         │
-│ latitude      │ REAL                       │
-│ longitude     │ REAL                       │
-└──────────────┴───────────────┘
-```
-
-| Column | Type | Constraints | Description |
-|---|---|---|---|
-| `id` | `Int` | `PRIMARY KEY`, auto-generated | Surrogate key for each favorite entry. |
-| `name` | `String` | `UNIQUE INDEX` | Display name of the city; uniqueness prevents duplicate favorites. |
-| `latitude` | `Double` | — | Latitude used to re-fetch weather for this city. |
-| `longitude` | `Double` | — | Longitude used to re-fetch weather for this city. |
-
-**Entity**: `FavoriteCityEntity` (`data/src/main/java/com/example/skkniapp/data/local/FavoriteCityEntity.kt`)
-**DAO**: `FavoriteCityDao` (`data/src/main/java/com/example/skkniapp/data/local/FavoriteCityDao.kt`) exposes:
-
-| Operation | Query | Purpose |
-|---|---|---|
-| `getAll()` | `SELECT * FROM favorite_city ORDER BY id ASC` | Load all favorites in insertion order. |
-| `insert(city)` | `INSERT ... ON CONFLICT REPLACE` | Add a favorite, replacing it if the same name already exists. |
-| `deleteByName(name)` | `DELETE FROM favorite_city WHERE name = :name` | Remove a favorite by its city name. |
-| `count()` | `SELECT COUNT(*) FROM favorite_city` | Used to decide whether a city is already favorited. |
-
-There is no migration history yet (`version = 1`); the database is built with `fallbackToDestructiveMigration()`, so a schema version bump will wipe and recreate the table rather than migrate it — acceptable for this app since favorites are easily re-added.
+Weather and geocoding data is sourced from the free, key-less [Open-Meteo API](https://open-meteo.com/) (forecast + geocoding) and [BigDataCloud](https://www.bigdatacloud.com/) (reverse geocoding), accessed through `WeatherApiService` in the `:data` module — see [`docs/NETWORK.md`](docs/NETWORK.md).
 
 ## Getting Started
 
@@ -155,6 +125,8 @@ Build from the command line:
 
 The debug APK will be at `app/build/outputs/apk/debug/`.
 
+> ⚠️ Before shipping a **signed release build**, you must configure freeRASP with your real release signing certificate hash — see [`docs/SECURITY.md`](docs/SECURITY.md#configuring-freerasp-before-a-release-build), otherwise the app will flag itself as tampered.
+
 ## Project Structure
 
 ```
@@ -162,6 +134,7 @@ app/
   src/main/java/com/example/skkniapp/
     MainActivity.kt, SkkniApp.kt
     di/ViewModelModule.kt
+    security/     ← RaspGuard (freeRASP)
     ui/weather/   ← WeatherFragment, WeatherViewModel, adapters, mappers, UI models
     ui/compass/   ← CompassFragment
   src/main/res/   ← layouts, drawables, values (single shared resource pool)
@@ -169,6 +142,8 @@ app/
 core/    src/main/java/com/example/skkniapp/core/        ← AppConstants, UiState
 domain/  src/main/java/com/example/skkniapp/domain/       ← models, repository interface, use case
 data/    src/main/java/com/example/skkniapp/data/         ← remote (Retrofit + DTOs), local (Room), mappers, repository impl, DI
+
+docs/    DATABASE.md, SECURITY.md, NETWORK.md, SENSORS.md ← deep-dive documentation
 ```
 
 ## Implementation Notes
@@ -176,3 +151,14 @@ data/    src/main/java/com/example/skkniapp/data/         ← remote (Retrofit +
 - **Favorites carousel**: `FavoriteCitiesPagerAdapter` splits the favorites list into pages of at most 3 cities (`chunked(3)`); each page renders its items dynamically into a `LinearLayout`, left-packed (no stretching when the last page has fewer than 3 items). The dot indicator (`llDotsIndicator`) is only shown when there is more than one page.
 - **Permission flow**: location is requested via `ActivityResultContracts.RequestPermission`; if denied, the app falls back to a Snackbar message and skips loading location-based weather.
 - **Favorite star icon**: hidden while the weather state is still `Loading`, to avoid the star flashing into view before the newly selected city's data has actually finished loading.
+
+## Deep-Dive Docs
+
+These were split out of this README to keep it scannable — each one is self-contained with full code snippets:
+
+| Doc | Covers |
+|---|---|
+| [`docs/DATABASE.md`](docs/DATABASE.md) | Room schema, entity/DAO code, migration policy |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Platform hardening + full freeRASP (RASP) integration & pre-release setup |
+| [`docs/NETWORK.md`](docs/NETWORK.md) | Retrofit/OkHttp client, API definitions, error handling |
+| [`docs/SENSORS.md`](docs/SENSORS.md) | Shake-to-refresh and wind-compass sensor code |
