@@ -1,16 +1,16 @@
 package com.example.skkniapp.ui.weather
 
-import com.example.skkniapp.domain.model.CityWeatherDomain
-import com.example.skkniapp.domain.model.DailyForecastDomain
-import com.example.skkniapp.domain.model.HourlyForecastDomain
-import com.example.skkniapp.domain.model.WeatherDomain
-import com.example.skkniapp.domain.util.WeatherCodeMapper
-import com.example.skkniapp.domain.util.WindDirectionMapper
+import com.example.skkniapp.domain.model.CityWeatherDomainModel
+import com.example.skkniapp.domain.model.DailyForecastDomainModel
+import com.example.skkniapp.domain.model.HourlyForecastDomainModel
+import com.example.skkniapp.domain.model.WeatherDomainModel
+import com.example.skkniapp.data.util.WeatherCodeMapper
+import com.example.skkniapp.data.util.WindDirectionMapper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-fun WeatherDomain.toUiModel(cityName: String, locationDetailLabel: String? = null): WeatherUiModel {
+fun WeatherDomainModel.toUiModel(cityName: String, locationDetailLabel: String? = null): WeatherUiModel {
     return WeatherUiModel(
         cityName = cityName,
         locationDetailLabel = locationDetailLabel,
@@ -30,7 +30,7 @@ fun WeatherDomain.toUiModel(cityName: String, locationDetailLabel: String? = nul
 private fun todayDateString(): String =
     SimpleDateFormat("yyyy-MM-dd", Locale("id", "ID")).format(Date())
 
-fun DailyForecastDomain.toUiModel(): DailyForecastUiModel {
+fun DailyForecastDomainModel.toUiModel(): DailyForecastUiModel {
     val isToday = date == todayDateString()
     val dayLabel = if (isToday) {
         "Hari Ini"
@@ -53,7 +53,7 @@ fun DailyForecastDomain.toUiModel(): DailyForecastUiModel {
     )
 }
 
-fun HourlyForecastDomain.toUiModel(): HourlyForecastUiModel {
+fun HourlyForecastDomainModel.toUiModel(): HourlyForecastUiModel {
     val date = time.substringBefore("T")
     val timeLabel = runCatching {
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale("id", "ID"))
@@ -70,7 +70,7 @@ fun HourlyForecastDomain.toUiModel(): HourlyForecastUiModel {
     )
 }
 
-fun CityWeatherDomain.toUiModel(): CityWeatherUiModel {
+fun CityWeatherDomainModel.toUiModel(): CityWeatherUiModel {
     return CityWeatherUiModel(
         cityName = cityName,
         latitude = latitude,

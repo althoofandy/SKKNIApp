@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dot_indicator_size">8dp</dimen>
+    <dimen name="dot_indicator_margin">4dp</dimen>
+    <dimen name="favorites_pager_height">120dp</dimen>
+</resources>

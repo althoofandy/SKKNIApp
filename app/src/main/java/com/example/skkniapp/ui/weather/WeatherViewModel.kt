@@ -3,8 +3,8 @@ package com.example.skkniapp.ui.weather
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skkniapp.core.AppConstants
-import com.example.skkniapp.core.Resource
-import com.example.skkniapp.domain.model.CityLocation
+import com.example.skkniapp.core.UiState
+import com.example.skkniapp.domain.model.CityLocationDomainModel
 import com.example.skkniapp.domain.usecase.WeatherDashboardUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -18,14 +18,14 @@ class WeatherViewModel(
     private val weatherDashboardUseCase: WeatherDashboardUseCase
 ) : ViewModel() {
 
-    private val _weatherState = MutableStateFlow<Resource<WeatherUiModel>>(Resource.Loading)
-    val weatherState: StateFlow<Resource<WeatherUiModel>> = _weatherState.asStateFlow()
+    private val _weatherState = MutableStateFlow<UiState<WeatherUiModel>>(UiState.Loading)
+    val weatherState: StateFlow<UiState<WeatherUiModel>> = _weatherState.asStateFlow()
 
-    private val _otherCitiesState = MutableStateFlow<Resource<List<CityWeatherUiModel>>>(Resource.Loading)
-    val otherCitiesState: StateFlow<Resource<List<CityWeatherUiModel>>> = _otherCitiesState.asStateFlow()
+    private val _otherCitiesState = MutableStateFlow<UiState<List<CityWeatherUiModel>>>(UiState.Loading)
+    val otherCitiesState: StateFlow<UiState<List<CityWeatherUiModel>>> = _otherCitiesState.asStateFlow()
 
-    private val _searchResultsState = MutableStateFlow<Resource<List<CitySearchResultUiModel>>>(Resource.Success(emptyList()))
-    val searchResultsState: StateFlow<Resource<List<CitySearchResultUiModel>>> = _searchResultsState.asStateFlow()
+    private val _searchResultsState = MutableStateFlow<UiState<List<CitySearchResultUiModel>>>(UiState.Success(emptyList()))
+    val searchResultsState: StateFlow<UiState<List<CitySearchResultUiModel>>> = _searchResultsState.asStateFlow()
 
     private val _selectedCityName = MutableStateFlow<String?>(null)
     val selectedCityName: StateFlow<String?> = _selectedCityName.asStateFlow()
@@ -39,14 +39,14 @@ class WeatherViewModel(
     fun loadWeatherForCurrentLocation() {
         _selectedCityName.value = null
         viewModelScope.launch {
-            _weatherState.value = Resource.Loading
+            _weatherState.value = UiState.Loading
             runCatching {
                 val result = weatherDashboardUseCase.loadCurrentLocationWeather()
                 result.weather.toUiModel(AppConstants.CURRENT_LOCATION_LABEL, result.placeName)
             }.onSuccess { uiModel ->
-                _weatherState.value = Resource.Success(uiModel)
+                _weatherState.value = UiState.Success(uiModel)
             }.onFailure { throwable ->
-                _weatherState.value = Resource.Error(throwable.message ?: "Terjadi kesalahan")
+                _weatherState.value = UiState.Error(throwable.message ?: "Terjadi kesalahan")
             }
         }
     }
@@ -54,26 +54,26 @@ class WeatherViewModel(
     fun selectCity(cityName: String, latitude: Double, longitude: Double) {
         _selectedCityName.value = cityName
         viewModelScope.launch {
-            _weatherState.value = Resource.Loading
+            _weatherState.value = UiState.Loading
             runCatching {
                 weatherDashboardUseCase.loadWeatherForCity(latitude, longitude).toUiModel(cityName)
             }.onSuccess { uiModel ->
-                _weatherState.value = Resource.Success(uiModel)
+                _weatherState.value = UiState.Success(uiModel)
             }.onFailure { throwable ->
-                _weatherState.value = Resource.Error(throwable.message ?: "Terjadi kesalahan")
+                _weatherState.value = UiState.Error(throwable.message ?: "Terjadi kesalahan")
             }
         }
     }
 
     fun loadOtherCitiesWeather() {
         viewModelScope.launch {
-            _otherCitiesState.value = Resource.Loading
+            _otherCitiesState.value = UiState.Loading
             runCatching {
                 weatherDashboardUseCase.loadFavoriteCitiesWeather().map { it.toUiModel() }
             }.onSuccess { uiModels ->
-                _otherCitiesState.value = Resource.Success(uiModels)
+                _otherCitiesState.value = UiState.Success(uiModels)
             }.onFailure { throwable ->
-                _otherCitiesState.value = Resource.Error(throwable.message ?: "Terjadi kesalahan")
+                _otherCitiesState.value = UiState.Error(throwable.message ?: "Terjadi kesalahan")
             }
         }
     }
@@ -81,24 +81,24 @@ class WeatherViewModel(
     fun searchCity(query: String) {
         searchJob?.cancel()
         if (query.isBlank()) {
-            _searchResultsState.value = Resource.Success(emptyList())
+            _searchResultsState.value = UiState.Success(emptyList())
             return
         }
         searchJob = viewModelScope.launch {
             delay(AppConstants.SEARCH_DEBOUNCE_MS)
-            _searchResultsState.value = Resource.Loading
+            _searchResultsState.value = UiState.Loading
             runCatching {
                 weatherDashboardUseCase.searchCity(query).map { it.toUiModel() }
             }.onSuccess { results ->
-                _searchResultsState.value = Resource.Success(results)
+                _searchResultsState.value = UiState.Success(results)
             }.onFailure { throwable ->
-                _searchResultsState.value = Resource.Error(throwable.message ?: "Gagal mencari kota")
+                _searchResultsState.value = UiState.Error(throwable.message ?: "Gagal mencari kota")
             }
         }
     }
 
     fun isCityFavorited(cityName: String): Boolean {
-        return (_otherCitiesState.value as? Resource.Success)?.data.orEmpty().any { it.cityName == cityName }
+        return (_otherCitiesState.value as? UiState.Success)?.data.orEmpty().any { it.cityName == cityName }
     }
 
     fun addCityToFavorites(cityName: String, latitude: Double, longitude: Double, temperatureLabel: String, emoji: String) {
@@ -109,17 +109,17 @@ class WeatherViewModel(
             temperatureLabel = temperatureLabel,
             emoji = emoji
         )
-        val currentList = (_otherCitiesState.value as? Resource.Success)?.data.orEmpty()
-        _otherCitiesState.update { Resource.Success(currentList + newItem) }
+        val currentList = (_otherCitiesState.value as? UiState.Success)?.data.orEmpty()
+        _otherCitiesState.update { UiState.Success(currentList + newItem) }
 
         viewModelScope.launch {
-            weatherDashboardUseCase.addFavoriteCity(CityLocation(cityName, latitude, longitude))
+            weatherDashboardUseCase.addFavoriteCity(CityLocationDomainModel(cityName, latitude, longitude))
         }
     }
 
     fun removeCityFromFavorites(cityName: String) {
-        val currentList = (_otherCitiesState.value as? Resource.Success)?.data.orEmpty()
-        _otherCitiesState.update { Resource.Success(currentList.filterNot { it.cityName == cityName }) }
+        val currentList = (_otherCitiesState.value as? UiState.Success)?.data.orEmpty()
+        _otherCitiesState.update { UiState.Success(currentList.filterNot { it.cityName == cityName }) }
 
         viewModelScope.launch {
             weatherDashboardUseCase.removeFavoriteCity(cityName)

@@ -9,6 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ScrollView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -17,10 +19,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.viewpager2.widget.ViewPager2
 import com.example.skkniapp.R
 import com.example.skkniapp.core.AppConstants
-import com.example.skkniapp.core.Resource
-import com.example.skkniapp.data.sensor.ShakeDetector
+import com.example.skkniapp.core.UiState
+import com.example.skkniapp.ui.weather.sensor.ShakeDetector
 import com.example.skkniapp.databinding.FragmentWeatherBinding
 import com.example.skkniapp.databinding.ItemDailyForecastBinding
 import com.google.android.material.snackbar.Snackbar
@@ -37,15 +40,22 @@ class WeatherFragment : Fragment() {
     private var selectedCityLatLng: Pair<Double, Double>? = null
     private var currentWeatherUiModel: WeatherUiModel? = null
     private var isForecastExpanded = false
+    private var isWeatherLoading = true
 
     private var shakeDetector: ShakeDetector? = null
 
-    private val cityWeatherAdapter = CityWeatherAdapter(
+    private val favoriteCitiesPagerAdapter = FavoriteCitiesPagerAdapter(
         onClick = { city ->
             selectedCityLatLng = city.latitude to city.longitude
             viewModel.selectCity(city.cityName, city.latitude, city.longitude)
         }
     )
+
+    private val favoritesPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
+        override fun onPageSelected(position: Int) {
+            updateDotsIndicator(position)
+        }
+    }
 
     private val citySearchAdapter = CitySearchAdapter(
         onResultClick = { result ->
@@ -83,7 +93,8 @@ class WeatherFragment : Fragment() {
             Snackbar.make(binding.root, getString(R.string.shake_refresh_triggered), Snackbar.LENGTH_SHORT).show()
         }
 
-        binding.rvOtherCities.adapter = cityWeatherAdapter
+        binding.vpOtherCities.adapter = favoriteCitiesPagerAdapter
+        binding.vpOtherCities.registerOnPageChangeCallback(favoritesPageChangeCallback)
         binding.rvSearchResults.adapter = citySearchAdapter
 
         binding.btnGetWeather.setOnClickListener {
@@ -142,7 +153,7 @@ class WeatherFragment : Fragment() {
             windSpeedLabel = uiModel.windSpeedLabel,
             cityName = cityName
         )
-        findNavController().navigate(R.id.compassFragment, args)
+        findNavController().navigate(com.example.skkniapp.R.id.compassFragment, args)
     }
 
     private fun retryWeather() {
@@ -180,11 +191,12 @@ class WeatherFragment : Fragment() {
         })
     }
 
-    private fun renderWeather(state: Resource<WeatherUiModel>) = preserveScrollPosition {
+    private fun renderWeather(state: UiState<WeatherUiModel>) = preserveScrollPosition {
         val shimmer = binding.shimmerWeatherInclude.root
         val forecastShimmer = binding.shimmerForecastInclude.root
         when (state) {
-            is Resource.Loading -> {
+            is UiState.Loading -> {
+                isWeatherLoading = true
                 binding.groupWeatherContent.visibility = View.GONE
                 binding.layoutWeatherError.visibility = View.GONE
                 binding.tvLocationDetail.visibility = View.GONE
@@ -197,7 +209,8 @@ class WeatherFragment : Fragment() {
                 forecastShimmer.visibility = View.VISIBLE
                 forecastShimmer.startShimmer()
             }
-            is Resource.Success -> {
+            is UiState.Success -> {
+                isWeatherLoading = false
                 shimmer.stopShimmer()
                 shimmer.visibility = View.GONE
                 binding.layoutWeatherError.visibility = View.GONE
@@ -211,7 +224,8 @@ class WeatherFragment : Fragment() {
                 bindWeather(state.data)
                 updateFavoriteStarIcon()
             }
-            is Resource.Error -> {
+            is UiState.Error -> {
+                isWeatherLoading = false
                 shimmer.stopShimmer()
                 shimmer.visibility = View.GONE
                 binding.groupWeatherContent.visibility = View.GONE
@@ -231,38 +245,43 @@ class WeatherFragment : Fragment() {
         }
     }
 
-    private fun renderOtherCities(state: Resource<List<CityWeatherUiModel>>) = preserveScrollPosition {
+    private fun renderOtherCities(state: UiState<List<CityWeatherUiModel>>) = preserveScrollPosition {
         val shimmer = binding.shimmerFavoritesInclude.root
         when (state) {
-            is Resource.Loading -> {
-                binding.rvOtherCities.visibility = View.GONE
+            is UiState.Loading -> {
+                binding.vpOtherCities.visibility = View.GONE
+                binding.llDotsIndicator.visibility = View.GONE
                 binding.tvFavoritesEmpty.visibility = View.GONE
                 binding.tvOtherCitiesHint.visibility = View.GONE
                 binding.layoutFavoritesError.visibility = View.GONE
                 shimmer.visibility = View.VISIBLE
                 shimmer.startShimmer()
             }
-            is Resource.Success -> {
+            is UiState.Success -> {
                 shimmer.stopShimmer()
                 shimmer.visibility = View.GONE
                 binding.layoutFavoritesError.visibility = View.GONE
 
                 if (state.data.isEmpty()) {
-                    binding.rvOtherCities.visibility = View.GONE
+                    binding.vpOtherCities.visibility = View.GONE
+                    binding.llDotsIndicator.visibility = View.GONE
                     binding.tvFavoritesEmpty.visibility = View.VISIBLE
                     binding.tvOtherCitiesHint.visibility = View.GONE
                 } else {
                     binding.tvFavoritesEmpty.visibility = View.GONE
-                    binding.rvOtherCities.visibility = View.VISIBLE
+                    binding.vpOtherCities.visibility = View.VISIBLE
                     binding.tvOtherCitiesHint.visibility = View.VISIBLE
-                    cityWeatherAdapter.submitList(state.data)
+                    favoriteCitiesPagerAdapter.submitList(state.data)
+                    setupDotsIndicator(favoriteCitiesPagerAdapter.getPageCount())
+                    updateDotsIndicator(binding.vpOtherCities.currentItem)
                 }
                 updateFavoriteStarIcon()
             }
-            is Resource.Error -> {
+            is UiState.Error -> {
                 shimmer.stopShimmer()
                 shimmer.visibility = View.GONE
-                binding.rvOtherCities.visibility = View.GONE
+                binding.vpOtherCities.visibility = View.GONE
+                binding.llDotsIndicator.visibility = View.GONE
                 binding.tvFavoritesEmpty.visibility = View.GONE
                 binding.tvOtherCitiesHint.visibility = View.GONE
                 binding.layoutFavoritesError.visibility = View.VISIBLE
@@ -270,14 +289,47 @@ class WeatherFragment : Fragment() {
         }
     }
 
-    private fun renderSearchResults(state: Resource<List<CitySearchResultUiModel>>) {
+    private fun setupDotsIndicator(pageCount: Int) {
+        if (pageCount <= 1) {
+            binding.llDotsIndicator.visibility = View.GONE
+            binding.llDotsIndicator.removeAllViews()
+            return
+        }
+
+        binding.llDotsIndicator.visibility = View.VISIBLE
+        if (binding.llDotsIndicator.childCount == pageCount) return
+
+        binding.llDotsIndicator.removeAllViews()
+        repeat(pageCount) {
+            val dot = ImageView(requireContext())
+            val sizePx = resources.getDimensionPixelSize(R.dimen.dot_indicator_size)
+            val marginPx = resources.getDimensionPixelSize(R.dimen.dot_indicator_margin)
+            val params = LinearLayout.LayoutParams(sizePx, sizePx).apply {
+                marginStart = marginPx
+                marginEnd = marginPx
+            }
+            dot.layoutParams = params
+            binding.llDotsIndicator.addView(dot)
+        }
+    }
+
+    private fun updateDotsIndicator(selectedPosition: Int) {
+        for (i in 0 until binding.llDotsIndicator.childCount) {
+            val dot = binding.llDotsIndicator.getChildAt(i) as ImageView
+            dot.setImageResource(
+                if (i == selectedPosition) R.drawable.dot_indicator_active else R.drawable.dot_indicator_inactive
+            )
+        }
+    }
+
+    private fun renderSearchResults(state: UiState<List<CitySearchResultUiModel>>) {
         when (state) {
-            is Resource.Loading -> Unit
-            is Resource.Success -> {
+            is UiState.Loading -> Unit
+            is UiState.Success -> {
                 citySearchAdapter.submitList(state.data)
                 binding.rvSearchResults.visibility = if (state.data.isEmpty()) View.GONE else View.VISIBLE
             }
-            is Resource.Error -> {
+            is UiState.Error -> {
                 binding.rvSearchResults.visibility = View.GONE
                 Snackbar.make(binding.root, state.message, Snackbar.LENGTH_SHORT).show()
             }
@@ -285,7 +337,7 @@ class WeatherFragment : Fragment() {
     }
 
     private fun renderSelectedCity(cityName: String?) {
-        cityWeatherAdapter.setSelectedCity(cityName)
+        favoriteCitiesPagerAdapter.setSelectedCity(cityName)
         if (cityName == null) {
             binding.tvScreenTitle.text = getString(R.string.weather_title)
             binding.btnGetWeather.text = getString(R.string.action_refresh)
@@ -298,7 +350,7 @@ class WeatherFragment : Fragment() {
 
     private fun updateFavoriteStarIcon() {
         val cityName = viewModel.selectedCityName.value
-        if (cityName == null) {
+        if (cityName == null || isWeatherLoading) {
             binding.btnFavorite.visibility = View.GONE
             return
         }
@@ -410,6 +462,7 @@ class WeatherFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.vpOtherCities.unregisterOnPageChangeCallback(favoritesPageChangeCallback)
         shakeDetector = null
         _binding = null
     }

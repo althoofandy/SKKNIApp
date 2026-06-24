@@ -1,16 +1,16 @@
 package com.example.skkniapp.domain.repository
 
-import com.example.skkniapp.domain.model.CityLocation
-import com.example.skkniapp.domain.model.CitySearchResult
-import com.example.skkniapp.domain.model.GeoLocation
-import com.example.skkniapp.domain.model.WeatherDomain
+import com.example.skkniapp.domain.model.CityLocationDomainModel
+import com.example.skkniapp.domain.model.CitySearchResultDomainModel
+import com.example.skkniapp.domain.model.GeoLocationDomainModel
+import com.example.skkniapp.domain.model.WeatherDomainModel
 
 interface WeatherRepository {
-    suspend fun getCurrentWeather(latitude: Double, longitude: Double): WeatherDomain
-    suspend fun searchCity(query: String): List<CitySearchResult>
+    suspend fun getCurrentWeather(latitude: Double, longitude: Double): WeatherDomainModel
+    suspend fun searchCity(query: String): List<CitySearchResultDomainModel>
     suspend fun getPlaceName(latitude: Double, longitude: Double): String?
-    suspend fun getCurrentLocation(): GeoLocation?
-    suspend fun getFavoriteCities(): List<CityLocation>
-    suspend fun addFavoriteCity(city: CityLocation)
+    suspend fun getCurrentLocation(): GeoLocationDomainModel?
+    suspend fun getFavoriteCities(): List<CityLocationDomainModel>
+    suspend fun addFavoriteCity(city: CityLocationDomainModel)
     suspend fun removeFavoriteCity(name: String)
 }

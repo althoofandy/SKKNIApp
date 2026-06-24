@@ -12,7 +12,7 @@
         tools:layout="@layout/fragment_weather" />
 
     <fragment
-        android:id="@+id/compassFragment"
+        android:id="@id/compassFragment"
         android:name="com.example.skkniapp.ui.compass.CompassFragment"
         android:label="@string/compass_title"
         tools:layout="@layout/fragment_compass" />

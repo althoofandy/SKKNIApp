@@ -1,4 +1,4 @@
-package com.example.skkniapp.domain.util
+package com.example.skkniapp.data.util
 
 import com.example.skkniapp.core.AppConstants
 

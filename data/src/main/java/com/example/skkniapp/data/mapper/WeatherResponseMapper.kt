@@ -1,32 +1,34 @@
 package com.example.skkniapp.data.mapper
 
 import com.example.skkniapp.data.remote.dto.WeatherResponse
-import com.example.skkniapp.domain.model.DailyForecastDomain
-import com.example.skkniapp.domain.model.HourlyForecastDomain
-import com.example.skkniapp.domain.model.WeatherDomain
-import com.example.skkniapp.domain.util.WeatherCodeMapper
+import com.example.skkniapp.domain.model.DailyForecastDomainModel
+import com.example.skkniapp.domain.model.HourlyForecastDomainModel
+import com.example.skkniapp.domain.model.WeatherDomainModel
+import com.example.skkniapp.data.util.WeatherCodeMapper
 
-fun WeatherResponse.toDomain(): WeatherDomain {
-    val forecast = daily?.time?.indices?.map { index ->
-        DailyForecastDomain(
-            date = daily.time[index],
-            maxTemperature = daily.maxTemperature[index],
-            minTemperature = daily.minTemperature[index],
-            weatherCode = daily.weatherCode[index],
-            precipitationProbability = daily.precipitationProbabilityMax?.getOrNull(index) ?: 0
+fun WeatherResponse.toDomain(): WeatherDomainModel {
+    val dailyResponse = daily
+    val forecast = dailyResponse?.time?.indices?.map { index ->
+        DailyForecastDomainModel(
+            date = dailyResponse.time[index],
+            maxTemperature = dailyResponse.maxTemperature[index],
+            minTemperature = dailyResponse.minTemperature[index],
+            weatherCode = dailyResponse.weatherCode[index],
+            precipitationProbability = dailyResponse.precipitationProbabilityMax?.getOrNull(index) ?: 0
         )
     }.orEmpty()
 
-    val hourlyForecast = hourly?.time?.indices?.map { index ->
-        HourlyForecastDomain(
-            time = hourly.time[index],
-            temperature = hourly.temperature[index],
-            weatherCode = hourly.weatherCode[index],
-            precipitationProbability = hourly.precipitationProbability?.getOrNull(index) ?: 0
+    val hourlyResponse = hourly
+    val hourlyForecast = hourlyResponse?.time?.indices?.map { index ->
+        HourlyForecastDomainModel(
+            time = hourlyResponse.time[index],
+            temperature = hourlyResponse.temperature[index],
+            weatherCode = hourlyResponse.weatherCode[index],
+            precipitationProbability = hourlyResponse.precipitationProbability?.getOrNull(index) ?: 0
         )
     }.orEmpty()
 
-    return WeatherDomain(
+    return WeatherDomainModel(
         temperature = current.temperature,
         feelsLike = current.feelsLike,
         humidity = current.humidity,

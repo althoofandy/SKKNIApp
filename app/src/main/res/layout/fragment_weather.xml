@@ -340,18 +340,25 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvOtherCitiesTitle" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvOtherCities"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/vpOtherCities"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/favorites_pager_height"
             android:layout_marginTop="12dp"
-            android:clipToPadding="false"
-            android:orientation="horizontal"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvOtherCitiesHint"
-            tools:listitem="@layout/item_city_weather" />
+            app:layout_constraintTop_toBottomOf="@id/tvOtherCitiesHint" />
+
+        <LinearLayout
+            android:id="@+id/llDotsIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@id/vpOtherCities"
+            app:layout_constraintStart_toStartOf="@id/vpOtherCities"
+            app:layout_constraintTop_toBottomOf="@id/vpOtherCities" />
 
         <include
             android:id="@+id/shimmerFavoritesInclude"
@@ -412,7 +419,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:barrierDirection="bottom"
-            app:constraint_referenced_ids="rvOtherCities,shimmerFavoritesInclude,tvFavoritesEmpty,layoutFavoritesError" />
+            app:constraint_referenced_ids="vpOtherCities,llDotsIndicator,shimmerFavoritesInclude,tvFavoritesEmpty,layoutFavoritesError" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardForecast"

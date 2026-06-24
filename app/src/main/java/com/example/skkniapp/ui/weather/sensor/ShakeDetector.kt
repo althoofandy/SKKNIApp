@@ -1,4 +1,4 @@
-package com.example.skkniapp.data.sensor
+package com.example.skkniapp.ui.weather.sensor
 
 import android.content.Context
 import android.hardware.Sensor

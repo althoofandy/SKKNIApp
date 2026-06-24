@@ -1,8 +1,8 @@
 package com.example.skkniapp.ui.weather
 
-import com.example.skkniapp.domain.model.CitySearchResult
+import com.example.skkniapp.domain.model.CitySearchResultDomainModel
 
-fun CitySearchResult.toUiModel(): CitySearchResultUiModel {
+fun CitySearchResultDomainModel.toUiModel(): CitySearchResultUiModel {
     return CitySearchResultUiModel(
         name = name,
         subtitle = listOfNotNull(region, country).joinToString(", "),

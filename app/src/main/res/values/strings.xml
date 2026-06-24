@@ -22,6 +22,10 @@
     <string name="forecast_error_message">Gagal memuat prakiraan cuaca</string>
     <string name="favorites_empty_message">Belum ada kota favorit. Cari kota di atas untuk menambahkan.</string>
     <string name="favorites_error_message">Gagal memuat kota favorit.</string>
+    <string name="shake_refresh_triggered">Goyangan terdeteksi, memuat ulang cuaca…</string>
+    <string name="stat_feels_like_label">Terasa</string>
+    <string name="stat_humidity_label">Lembap</string>
+    <string name="stat_wind_label">Angin 🧭</string>
     <string name="compass_title">Kompas Arah Angin</string>
     <string name="compass_north">N</string>
     <string name="compass_east">E</string>
@@ -31,8 +35,4 @@
     <string name="compass_wind_info">Angin dari %1$s · %2$s</string>
     <string name="action_wind_compass">Lihat Kompas</string>
     <string name="compass_sensor_unavailable">Sensor kompas tidak tersedia di perangkat ini</string>
-    <string name="shake_refresh_triggered">Goyangan terdeteksi, memuat ulang cuaca…</string>
-    <string name="stat_feels_like_label">Terasa</string>
-    <string name="stat_humidity_label">Lembap</string>
-    <string name="stat_wind_label">Angin 🧭</string>
 </resources>

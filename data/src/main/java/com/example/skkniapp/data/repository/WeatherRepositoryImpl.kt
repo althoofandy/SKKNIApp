@@ -6,10 +6,10 @@ import com.example.skkniapp.data.local.FavoriteCityDao
 import com.example.skkniapp.data.local.FavoriteCityEntity
 import com.example.skkniapp.data.mapper.toDomain
 import com.example.skkniapp.data.remote.WeatherApiService
-import com.example.skkniapp.domain.model.CityLocation
-import com.example.skkniapp.domain.model.CitySearchResult
-import com.example.skkniapp.domain.model.GeoLocation
-import com.example.skkniapp.domain.model.WeatherDomain
+import com.example.skkniapp.domain.model.CityLocationDomainModel
+import com.example.skkniapp.domain.model.CitySearchResultDomainModel
+import com.example.skkniapp.domain.model.GeoLocationDomainModel
+import com.example.skkniapp.domain.model.WeatherDomainModel
 import com.example.skkniapp.domain.repository.WeatherRepository
 import com.example.skkniapp.domain.util.DefaultCities
 import com.google.android.gms.location.LocationServices
@@ -26,11 +26,11 @@ class WeatherRepositoryImpl(
 
     private val fusedClient = LocationServices.getFusedLocationProviderClient(context)
 
-    override suspend fun getCurrentWeather(latitude: Double, longitude: Double): WeatherDomain {
+    override suspend fun getCurrentWeather(latitude: Double, longitude: Double): WeatherDomainModel {
         return apiService.getCurrentWeather(latitude = latitude, longitude = longitude).toDomain()
     }
 
-    override suspend fun searchCity(query: String): List<CitySearchResult> {
+    override suspend fun searchCity(query: String): List<CitySearchResultDomainModel> {
         if (query.isBlank()) return emptyList()
         return apiService.searchCity(name = query).results.orEmpty().map { it.toDomain() }
     }
@@ -43,19 +43,19 @@ class WeatherRepositoryImpl(
     }
 
     @SuppressLint("MissingPermission")
-    override suspend fun getCurrentLocation(): GeoLocation? {
+    override suspend fun getCurrentLocation(): GeoLocationDomainModel? {
         val location = fusedClient
             .getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
             .await()
-        return location?.let { GeoLocation(it.latitude, it.longitude) }
+        return location?.let { GeoLocationDomainModel(it.latitude, it.longitude) }
     }
 
-    override suspend fun getFavoriteCities(): List<CityLocation> = withContext(Dispatchers.IO) {
+    override suspend fun getFavoriteCities(): List<CityLocationDomainModel> = withContext(Dispatchers.IO) {
         seedDefaultCitiesIfEmpty()
-        favoriteCityDao.getAll().map { CityLocation(it.name, it.latitude, it.longitude) }
+        favoriteCityDao.getAll().map { CityLocationDomainModel(it.name, it.latitude, it.longitude) }
     }
 
-    override suspend fun addFavoriteCity(city: CityLocation) = withContext(Dispatchers.IO) {
+    override suspend fun addFavoriteCity(city: CityLocationDomainModel) = withContext(Dispatchers.IO) {
         favoriteCityDao.insert(FavoriteCityEntity(name = city.name, latitude = city.latitude, longitude = city.longitude))
     }
 

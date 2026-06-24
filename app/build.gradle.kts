@@ -49,19 +49,19 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.viewpager2)
+    implementation(libs.shimmer)
+
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.runtime.ktx)
 
     implementation(libs.koin.android)
 
     implementation(libs.kotlinx.coroutines.android)
 
-    implementation(libs.lifecycle.viewmodel.ktx)
-    implementation(libs.lifecycle.runtime.ktx)
-
     implementation(libs.navigation.fragment.ktx)
     implementation(libs.navigation.ui.ktx)
-
-    implementation(libs.androidx.recyclerview)
-    implementation(libs.shimmer)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

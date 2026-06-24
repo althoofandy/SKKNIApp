@@ -1,16 +1,16 @@
 package com.example.skkniapp.domain.usecase
 
-import com.example.skkniapp.domain.model.CityLocation
-import com.example.skkniapp.domain.model.CitySearchResult
-import com.example.skkniapp.domain.model.CityWeatherDomain
-import com.example.skkniapp.domain.model.WeatherDomain
+import com.example.skkniapp.domain.model.CityLocationDomainModel
+import com.example.skkniapp.domain.model.CitySearchResultDomainModel
+import com.example.skkniapp.domain.model.CityWeatherDomainModel
+import com.example.skkniapp.domain.model.WeatherDomainModel
 import com.example.skkniapp.domain.repository.WeatherRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
 data class CurrentLocationWeather(
-    val weather: WeatherDomain,
+    val weather: WeatherDomainModel,
     val placeName: String?
 )
 
@@ -29,13 +29,13 @@ class WeatherDashboardUseCase(
         CurrentLocationWeather(weatherDeferred.await(), placeNameDeferred.await())
     }
 
-    suspend fun loadWeatherForCity(latitude: Double, longitude: Double): WeatherDomain =
+    suspend fun loadWeatherForCity(latitude: Double, longitude: Double): WeatherDomainModel =
         repository.getCurrentWeather(latitude, longitude)
 
-    suspend fun loadFavoriteCitiesWeather(): List<CityWeatherDomain> = coroutineScope {
+    suspend fun loadFavoriteCitiesWeather(): List<CityWeatherDomainModel> = coroutineScope {
         repository.getFavoriteCities().map { city ->
             async {
-                CityWeatherDomain(
+                CityWeatherDomainModel(
                     cityName = city.name,
                     latitude = city.latitude,
                     longitude = city.longitude,
@@ -45,9 +45,9 @@ class WeatherDashboardUseCase(
         }.awaitAll()
     }
 
-    suspend fun searchCity(query: String): List<CitySearchResult> = repository.searchCity(query)
+    suspend fun searchCity(query: String): List<CitySearchResultDomainModel> = repository.searchCity(query)
 
-    suspend fun addFavoriteCity(city: CityLocation) = repository.addFavoriteCity(city)
+    suspend fun addFavoriteCity(city: CityLocationDomainModel) = repository.addFavoriteCity(city)
 
     suspend fun removeFavoriteCity(name: String) = repository.removeFavoriteCity(name)
 }
