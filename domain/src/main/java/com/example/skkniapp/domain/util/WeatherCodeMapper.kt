@@ -1,28 +1,38 @@
 package com.example.skkniapp.domain.util
 
+import com.example.skkniapp.core.AppConstants
+
 object WeatherCodeMapper {
 
     fun toDescription(code: Int): String = when (code) {
-        0 -> "Cerah"
-        1, 2, 3 -> "Berawan"
-        45, 48 -> "Berkabut"
-        51, 53, 55 -> "Gerimis"
-        61, 63, 65 -> "Hujan"
-        71, 73, 75 -> "Salju"
-        80, 81, 82 -> "Hujan Deras"
-        95, 96, 99 -> "Badai Petir"
-        else -> "Tidak diketahui"
+        AppConstants.WMO_CLEAR -> AppConstants.WEATHER_DESC_CLEAR
+        AppConstants.WMO_PARTLY_CLOUDY_1, AppConstants.WMO_PARTLY_CLOUDY_2, AppConstants.WMO_PARTLY_CLOUDY_3 ->
+            AppConstants.WEATHER_DESC_CLOUDY
+        AppConstants.WMO_FOG_1, AppConstants.WMO_FOG_2 -> AppConstants.WEATHER_DESC_FOG
+        AppConstants.WMO_DRIZZLE_1, AppConstants.WMO_DRIZZLE_2, AppConstants.WMO_DRIZZLE_3 ->
+            AppConstants.WEATHER_DESC_DRIZZLE
+        AppConstants.WMO_RAIN_1, AppConstants.WMO_RAIN_2, AppConstants.WMO_RAIN_3 -> AppConstants.WEATHER_DESC_RAIN
+        AppConstants.WMO_SNOW_1, AppConstants.WMO_SNOW_2, AppConstants.WMO_SNOW_3 -> AppConstants.WEATHER_DESC_SNOW
+        AppConstants.WMO_HEAVY_RAIN_1, AppConstants.WMO_HEAVY_RAIN_2, AppConstants.WMO_HEAVY_RAIN_3 ->
+            AppConstants.WEATHER_DESC_HEAVY_RAIN
+        AppConstants.WMO_THUNDERSTORM_1, AppConstants.WMO_THUNDERSTORM_2, AppConstants.WMO_THUNDERSTORM_3 ->
+            AppConstants.WEATHER_DESC_THUNDERSTORM
+        else -> AppConstants.WEATHER_DESC_UNKNOWN
     }
 
     fun toEmoji(code: Int): String = when (code) {
-        0 -> "☀️"
-        1, 2, 3 -> "⛅"
-        45, 48 -> "🌫️"
-        51, 53, 55 -> "🌦️"
-        61, 63, 65 -> "🌧️"
-        71, 73, 75 -> "❄️"
-        80, 81, 82 -> "🌧️"
-        95, 96, 99 -> "⛈️"
-        else -> "🌡️"
+        AppConstants.WMO_CLEAR -> AppConstants.WEATHER_EMOJI_CLEAR
+        AppConstants.WMO_PARTLY_CLOUDY_1, AppConstants.WMO_PARTLY_CLOUDY_2, AppConstants.WMO_PARTLY_CLOUDY_3 ->
+            AppConstants.WEATHER_EMOJI_CLOUDY
+        AppConstants.WMO_FOG_1, AppConstants.WMO_FOG_2 -> AppConstants.WEATHER_EMOJI_FOG
+        AppConstants.WMO_DRIZZLE_1, AppConstants.WMO_DRIZZLE_2, AppConstants.WMO_DRIZZLE_3 ->
+            AppConstants.WEATHER_EMOJI_DRIZZLE
+        AppConstants.WMO_RAIN_1, AppConstants.WMO_RAIN_2, AppConstants.WMO_RAIN_3 -> AppConstants.WEATHER_EMOJI_RAIN
+        AppConstants.WMO_SNOW_1, AppConstants.WMO_SNOW_2, AppConstants.WMO_SNOW_3 -> AppConstants.WEATHER_EMOJI_SNOW
+        AppConstants.WMO_HEAVY_RAIN_1, AppConstants.WMO_HEAVY_RAIN_2, AppConstants.WMO_HEAVY_RAIN_3 ->
+            AppConstants.WEATHER_EMOJI_HEAVY_RAIN
+        AppConstants.WMO_THUNDERSTORM_1, AppConstants.WMO_THUNDERSTORM_2, AppConstants.WMO_THUNDERSTORM_3 ->
+            AppConstants.WEATHER_EMOJI_THUNDERSTORM
+        else -> AppConstants.WEATHER_EMOJI_UNKNOWN
     }
 }

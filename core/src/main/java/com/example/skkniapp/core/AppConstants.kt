@@ -42,4 +42,66 @@ object AppConstants {
     const val DEFAULT_CITY_3_NAME = "Denpasar"
     const val DEFAULT_CITY_3_LATITUDE = -8.6705
     const val DEFAULT_CITY_3_LONGITUDE = 115.2126
+
+    const val FORECAST_PATH = "v1/forecast"
+    const val GEOCODING_PATH = "v1/search"
+    const val REVERSE_GEOCODING_PATH = "data/reverse-geocode-client"
+
+    const val WEATHER_CURRENT_PARAMS =
+        "temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code"
+    const val WEATHER_DAILY_PARAMS =
+        "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max"
+    const val WEATHER_HOURLY_PARAMS = "temperature_2m,weather_code,precipitation_probability"
+    const val DEFAULT_LANGUAGE = "id"
+    const val DEFAULT_TIMEZONE = "auto"
+
+    // Kode cuaca WMO (World Meteorological Organization) yang dipakai Open-Meteo
+    const val WMO_CLEAR = 0
+    const val WMO_PARTLY_CLOUDY_1 = 1
+    const val WMO_PARTLY_CLOUDY_2 = 2
+    const val WMO_PARTLY_CLOUDY_3 = 3
+    const val WMO_FOG_1 = 45
+    const val WMO_FOG_2 = 48
+    const val WMO_DRIZZLE_1 = 51
+    const val WMO_DRIZZLE_2 = 53
+    const val WMO_DRIZZLE_3 = 55
+    const val WMO_RAIN_1 = 61
+    const val WMO_RAIN_2 = 63
+    const val WMO_RAIN_3 = 65
+    const val WMO_SNOW_1 = 71
+    const val WMO_SNOW_2 = 73
+    const val WMO_SNOW_3 = 75
+    const val WMO_HEAVY_RAIN_1 = 80
+    const val WMO_HEAVY_RAIN_2 = 81
+    const val WMO_HEAVY_RAIN_3 = 82
+    const val WMO_THUNDERSTORM_1 = 95
+    const val WMO_THUNDERSTORM_2 = 96
+    const val WMO_THUNDERSTORM_3 = 99
+
+    const val WEATHER_DESC_CLEAR = "Cerah"
+    const val WEATHER_DESC_CLOUDY = "Berawan"
+    const val WEATHER_DESC_FOG = "Berkabut"
+    const val WEATHER_DESC_DRIZZLE = "Gerimis"
+    const val WEATHER_DESC_RAIN = "Hujan"
+    const val WEATHER_DESC_SNOW = "Salju"
+    const val WEATHER_DESC_HEAVY_RAIN = "Hujan Deras"
+    const val WEATHER_DESC_THUNDERSTORM = "Badai Petir"
+    const val WEATHER_DESC_UNKNOWN = "Tidak diketahui"
+
+    const val WEATHER_EMOJI_CLEAR = "☀️"
+    const val WEATHER_EMOJI_CLOUDY = "⛅"
+    const val WEATHER_EMOJI_FOG = "🌫️"
+    const val WEATHER_EMOJI_DRIZZLE = "🌦️"
+    const val WEATHER_EMOJI_RAIN = "🌧️"
+    const val WEATHER_EMOJI_SNOW = "❄️"
+    const val WEATHER_EMOJI_HEAVY_RAIN = "🌧️"
+    const val WEATHER_EMOJI_THUNDERSTORM = "⛈️"
+    const val WEATHER_EMOJI_UNKNOWN = "🌡️"
+
+    val WIND_DIRECTION_LABELS = listOf(
+        "Utara", "Utara Timur Laut", "Timur Laut", "Timur Timur Laut",
+        "Timur", "Timur Tenggara", "Tenggara", "Selatan Tenggara",
+        "Selatan", "Selatan Barat Daya", "Barat Daya", "Barat Barat Daya",
+        "Barat", "Barat Barat Laut", "Barat Laut", "Utara Barat Laut"
+    )
 }

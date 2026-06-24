@@ -4,10 +4,6 @@ import com.example.skkniapp.domain.model.CityLocation
 import com.example.skkniapp.domain.model.CitySearchResult
 import com.example.skkniapp.domain.model.CityWeatherDomain
 import com.example.skkniapp.domain.model.WeatherDomain
-import com.example.skkniapp.domain.repository.CitySearchRepository
-import com.example.skkniapp.domain.repository.FavoriteCityRepository
-import com.example.skkniapp.domain.repository.LocationRepository
-import com.example.skkniapp.domain.repository.ReverseGeocodingRepository
 import com.example.skkniapp.domain.repository.WeatherRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -19,43 +15,39 @@ data class CurrentLocationWeather(
 )
 
 class WeatherDashboardUseCase(
-    private val weatherRepository: WeatherRepository,
-    private val favoriteCityRepository: FavoriteCityRepository,
-    private val citySearchRepository: CitySearchRepository,
-    private val reverseGeocodingRepository: ReverseGeocodingRepository,
-    private val locationRepository: LocationRepository
+    private val repository: WeatherRepository
 ) {
 
     suspend fun loadCurrentLocationWeather(): CurrentLocationWeather = coroutineScope {
-        val location = locationRepository.getCurrentLocation()
+        val location = repository.getCurrentLocation()
             ?: error("Lokasi tidak ditemukan, pastikan GPS aktif")
 
-        val weatherDeferred = async { weatherRepository.getCurrentWeather(location.latitude, location.longitude) }
+        val weatherDeferred = async { repository.getCurrentWeather(location.latitude, location.longitude) }
         val placeNameDeferred = async {
-            runCatching { reverseGeocodingRepository.getPlaceName(location.latitude, location.longitude) }.getOrNull()
+            runCatching { repository.getPlaceName(location.latitude, location.longitude) }.getOrNull()
         }
         CurrentLocationWeather(weatherDeferred.await(), placeNameDeferred.await())
     }
 
     suspend fun loadWeatherForCity(latitude: Double, longitude: Double): WeatherDomain =
-        weatherRepository.getCurrentWeather(latitude, longitude)
+        repository.getCurrentWeather(latitude, longitude)
 
     suspend fun loadFavoriteCitiesWeather(): List<CityWeatherDomain> = coroutineScope {
-        favoriteCityRepository.getFavoriteCities().map { city ->
+        repository.getFavoriteCities().map { city ->
             async {
                 CityWeatherDomain(
                     cityName = city.name,
                     latitude = city.latitude,
                     longitude = city.longitude,
-                    weather = weatherRepository.getCurrentWeather(city.latitude, city.longitude)
+                    weather = repository.getCurrentWeather(city.latitude, city.longitude)
                 )
             }
         }.awaitAll()
     }
 
-    suspend fun searchCity(query: String): List<CitySearchResult> = citySearchRepository.searchCity(query)
+    suspend fun searchCity(query: String): List<CitySearchResult> = repository.searchCity(query)
 
-    suspend fun addFavoriteCity(city: CityLocation) = favoriteCityRepository.addFavoriteCity(city)
+    suspend fun addFavoriteCity(city: CityLocation) = repository.addFavoriteCity(city)
 
-    suspend fun removeFavoriteCity(name: String) = favoriteCityRepository.removeFavoriteCity(name)
+    suspend fun removeFavoriteCity(name: String) = repository.removeFavoriteCity(name)
 }
