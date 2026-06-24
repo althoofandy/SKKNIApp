@@ -28,6 +28,7 @@ An Android weather application (Kotlin) with automatic location-based weather, c
 - Current-location weather using **Google Play Services Location** (`FusedLocationProviderClient`), requested through the runtime `ACCESS_FINE_LOCATION` permission flow.
 - Reverse geocoding (coordinates → place name) and forward geocoding (city name search → coordinates) via the Open-Meteo Geocoding API and BigDataCloud reverse-geocoding endpoint.
 - In-app navigation graph (`nav_graph.xml`) routes between the weather dashboard and the wind-compass screen, passing wind data as navigation arguments.
+- 📄 **Full location flow, permission handling, and geocoding details: [`docs/LOCATION.md`](docs/LOCATION.md)**
 
 ### Mobile Interface
 - Responsive, scrollable dashboard (`fragment_weather.xml`) built with `ConstraintLayout`, Material Components, shimmer skeleton loaders, and empty/error states with retry actions.
@@ -162,3 +163,4 @@ These were split out of this README to keep it scannable — each one is self-co
 | [`docs/SECURITY.md`](docs/SECURITY.md) | Platform hardening + full freeRASP (RASP) integration & pre-release setup |
 | [`docs/NETWORK.md`](docs/NETWORK.md) | Retrofit/OkHttp client, API definitions, error handling |
 | [`docs/SENSORS.md`](docs/SENSORS.md) | Shake-to-refresh and wind-compass sensor code |
+| [`docs/LOCATION.md`](docs/LOCATION.md) | Location flow, permission handling, geocoding |
