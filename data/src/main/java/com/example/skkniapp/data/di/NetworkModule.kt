@@ -1,4 +1,4 @@
-package com.example.skkniapp.di
+package com.example.skkniapp.data.di
 
 import com.example.skkniapp.core.AppConstants
 import com.example.skkniapp.data.remote.GeocodingApiService

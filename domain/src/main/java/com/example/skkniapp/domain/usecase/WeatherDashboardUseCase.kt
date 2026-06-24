@@ -1,12 +1,12 @@
 package com.example.skkniapp.domain.usecase
 
-import com.example.skkniapp.data.location.LocationProvider
 import com.example.skkniapp.domain.model.CityLocation
 import com.example.skkniapp.domain.model.CitySearchResult
 import com.example.skkniapp.domain.model.CityWeatherDomain
 import com.example.skkniapp.domain.model.WeatherDomain
 import com.example.skkniapp.domain.repository.CitySearchRepository
 import com.example.skkniapp.domain.repository.FavoriteCityRepository
+import com.example.skkniapp.domain.repository.LocationRepository
 import com.example.skkniapp.domain.repository.ReverseGeocodingRepository
 import com.example.skkniapp.domain.repository.WeatherRepository
 import kotlinx.coroutines.async
@@ -23,11 +23,11 @@ class WeatherDashboardUseCase(
     private val favoriteCityRepository: FavoriteCityRepository,
     private val citySearchRepository: CitySearchRepository,
     private val reverseGeocodingRepository: ReverseGeocodingRepository,
-    private val locationProvider: LocationProvider
+    private val locationRepository: LocationRepository
 ) {
 
     suspend fun loadCurrentLocationWeather(): CurrentLocationWeather = coroutineScope {
-        val location = locationProvider.getCurrentLocation()
+        val location = locationRepository.getCurrentLocation()
             ?: error("Lokasi tidak ditemukan, pastikan GPS aktif")
 
         val weatherDeferred = async { weatherRepository.getCurrentWeather(location.latitude, location.longitude) }

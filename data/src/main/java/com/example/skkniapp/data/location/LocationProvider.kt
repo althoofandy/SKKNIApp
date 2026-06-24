@@ -2,18 +2,18 @@ package com.example.skkniapp.data.location
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.example.skkniapp.domain.model.GeoLocation
+import com.example.skkniapp.domain.repository.LocationRepository
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.tasks.await
 
-data class GeoLocation(val latitude: Double, val longitude: Double)
-
-class LocationProvider(context: Context) {
+class LocationProvider(context: Context) : LocationRepository {
 
     private val fusedClient = LocationServices.getFusedLocationProviderClient(context)
 
     @SuppressLint("MissingPermission")
-    suspend fun getCurrentLocation(): GeoLocation? {
+    override suspend fun getCurrentLocation(): GeoLocation? {
         val location = fusedClient
             .getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
             .await()

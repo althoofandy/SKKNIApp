@@ -1,4 +1,4 @@
-package com.example.skkniapp.di
+package com.example.skkniapp.domain.di
 
 import com.example.skkniapp.domain.usecase.WeatherDashboardUseCase
 import org.koin.dsl.module

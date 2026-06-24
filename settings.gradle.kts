@@ -21,4 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "SKKNI App"
 include(":app")
+include(":core")
+include(":domain")
+include(":data")
  
