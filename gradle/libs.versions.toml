@@ -23,6 +23,7 @@ shimmer = "0.5.0"
 room = "2.6.1"
 ksp = "2.0.21-1.0.27"
 freerasp = "18.0.2"
+rootbeer = "0.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -60,6 +61,7 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 talsec-freerasp = { group = "com.aheaditec.talsec.security", name = "TalsecSecurity-Community", version.ref = "freerasp" }
+rootbeer = { group = "com.scottyab", name = "rootbeer-lib", version.ref = "rootbeer" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

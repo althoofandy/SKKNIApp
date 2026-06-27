@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.navigation.ui.ktx)
 
     implementation(libs.talsec.freerasp)
+    implementation(libs.rootbeer)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
