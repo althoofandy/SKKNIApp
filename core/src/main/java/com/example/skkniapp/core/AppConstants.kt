@@ -104,4 +104,43 @@ object AppConstants {
         "Selatan", "Selatan Barat Daya", "Barat Daya", "Barat Barat Daya",
         "Barat", "Barat Barat Laut", "Barat Laut", "Utara Barat Laut"
     )
+
+    const val RASP_LOG_TAG = "RaspGuard"
+    const val RASP_EXPECTED_PACKAGE_NAME = "com.example.skkniapp"
+    val RASP_EXPECTED_SIGNING_CERTIFICATE_HASHES = arrayOf(
+        "M/jxW966OIazCDsz8PKGkwXzSJvl1GfSVesekBIJKVk="
+    )
+    const val RASP_WATCHER_MAIL = "security@example.com"
+
+    const val RASP_SETTING_DISABLED = 0
+    const val RASP_SETTING_ENABLED = 1
+
+    const val RASP_THREAT_ROOT = "Root/jailbreak detected"
+    const val RASP_THREAT_DEBUGGER = "Debugger attached"
+    const val RASP_THREAT_EMULATOR = "Running on an emulator"
+    const val RASP_THREAT_TAMPER = "App tampering/repackaging detected"
+    const val RASP_THREAT_UNTRUSTED_SOURCE = "Installed from an untrusted source"
+    const val RASP_THREAT_HOOK = "Hooking framework detected (Frida/Xposed)"
+    const val RASP_THREAT_DEVICE_BINDING = "Device binding mismatch"
+    const val RASP_THREAT_OBFUSCATION = "Obfuscation issue detected"
+    const val RASP_THREAT_MULTI_INSTANCE = "Multiple app instances detected"
+    const val RASP_THREAT_BOOTLOADER_UNLOCKED = "Bootloader is unlocked"
+    const val RASP_THREAT_DEVELOPER_MODE = "Developer mode is enabled"
+    const val RASP_THREAT_ADB_ENABLED = "USB debugging (ADB) is enabled"
+    const val RASP_THREAT_MALWARE_PREFIX = "Suspicious/malware apps detected: "
+
+    const val RASP_DIALOG_TITLE = "⚠️ Security threat detected"
+    const val RASP_DIALOG_POSITIVE_BUTTON = "Tutup aplikasi"
+    const val RASP_DIALOG_BULLET = "•  "
+    const val RASP_DIALOG_SEPARATOR = "\n"
+
+    const val RASP_EMULATOR_GENERIC = "generic"
+    const val RASP_EMULATOR_UNKNOWN = "unknown"
+    const val RASP_EMULATOR_GOOGLE_SDK = "google_sdk"
+    const val RASP_EMULATOR_MODEL_EMULATOR = "Emulator"
+    const val RASP_EMULATOR_MODEL_ANDROID_SDK_BUILT_FOR = "Android SDK built for"
+    const val RASP_EMULATOR_GENYMOTION = "Genymotion"
+    const val RASP_EMULATOR_PRODUCT_SDK_GPHONE = "sdk_gphone"
+    const val RASP_EMULATOR_HARDWARE_GOLDFISH = "goldfish"
+    const val RASP_EMULATOR_HARDWARE_RANCHU = "ranchu"
 }

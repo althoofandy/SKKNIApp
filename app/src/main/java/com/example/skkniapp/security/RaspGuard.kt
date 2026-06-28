@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.util.Log
 import com.scottyab.rootbeer.RootBeer
 import androidx.appcompat.app.AlertDialog
+import com.example.skkniapp.core.AppConstants
 import com.aheaditec.talsec_security.security.api.SuspiciousAppInfo
 import com.aheaditec.talsec_security.security.api.Talsec
 import com.aheaditec.talsec_security.security.api.TalsecConfig
@@ -20,14 +21,6 @@ import java.lang.ref.WeakReference
 import kotlin.system.exitProcess
 
 object RaspGuard {
-
-    private const val TAG = "RaspGuard"
-
-    private const val EXPECTED_PACKAGE_NAME = "com.example.skkniapp"
-    private val EXPECTED_SIGNING_CERTIFICATE_HASHES = arrayOf(
-        "M/jxW966OIazCDsz8PKGkwXzSJvl1GfSVesekBIJKVk="
-    )
-    private const val WATCHER_MAIL = "security@example.com"
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -43,33 +36,33 @@ object RaspGuard {
         preflight(application)
 
         val config = TalsecConfig.Builder(
-            EXPECTED_PACKAGE_NAME,
-            EXPECTED_SIGNING_CERTIFICATE_HASHES
+            AppConstants.RASP_EXPECTED_PACKAGE_NAME,
+            AppConstants.RASP_EXPECTED_SIGNING_CERTIFICATE_HASHES
         )
-            .watcherMail(WATCHER_MAIL)
+            .watcherMail(AppConstants.RASP_WATCHER_MAIL)
             .prod(isProductionBuild)
             .killOnBypass(isProductionBuild)
             .build()
 
         val threatDetectedListener = object : ThreatListener.ThreatDetected() {
-            override fun onRootDetected() = warn("Root/jailbreak detected")
-            override fun onDebuggerDetected() = warn("Debugger attached")
-            override fun onEmulatorDetected() = warn("Running on an emulator")
-            override fun onTamperDetected() = warn("App tampering/repackaging detected")
+            override fun onRootDetected() = warn(AppConstants.RASP_THREAT_ROOT)
+            override fun onDebuggerDetected() = warn(AppConstants.RASP_THREAT_DEBUGGER)
+            override fun onEmulatorDetected() = warn(AppConstants.RASP_THREAT_EMULATOR)
+            override fun onTamperDetected() = warn(AppConstants.RASP_THREAT_TAMPER)
             override fun onUntrustedInstallationSourceDetected() =
-                warn("Installed from an untrusted source")
-            override fun onHookDetected() = warn("Hooking framework detected (Frida/Xposed)")
-            override fun onDeviceBindingDetected() = warn("Device binding mismatch")
-            override fun onObfuscationIssuesDetected() = warn("Obfuscation issue detected")
-            override fun onMultiInstanceDetected() = warn("Multiple app instances detected")
+                warn(AppConstants.RASP_THREAT_UNTRUSTED_SOURCE)
+            override fun onHookDetected() = warn(AppConstants.RASP_THREAT_HOOK)
+            override fun onDeviceBindingDetected() = warn(AppConstants.RASP_THREAT_DEVICE_BINDING)
+            override fun onObfuscationIssuesDetected() = warn(AppConstants.RASP_THREAT_OBFUSCATION)
+            override fun onMultiInstanceDetected() = warn(AppConstants.RASP_THREAT_MULTI_INSTANCE)
             override fun onMalwareDetected(suspiciousApps: List<SuspiciousAppInfo>) =
-                warn("Suspicious/malware apps detected: ${suspiciousApps.size}")
+                warn(AppConstants.RASP_THREAT_MALWARE_PREFIX + suspiciousApps.size)
         }
 
         val deviceStateListener = object : ThreatListener.DeviceState() {
-            override fun onUnlockedDeviceDetected() = warn("Bootloader is unlocked")
-            override fun onDeveloperModeDetected() = warn("Developer mode is enabled")
-            override fun onADBEnabledDetected() = warn("USB debugging (ADB) is enabled")
+            override fun onUnlockedDeviceDetected() = warn(AppConstants.RASP_THREAT_BOOTLOADER_UNLOCKED)
+            override fun onDeveloperModeDetected() = warn(AppConstants.RASP_THREAT_DEVELOPER_MODE)
+            override fun onADBEnabledDetected() = warn(AppConstants.RASP_THREAT_ADB_ENABLED)
         }
 
         ThreatListener(threatDetectedListener, deviceStateListener)
@@ -79,35 +72,35 @@ object RaspGuard {
     }
 
     private fun preflight(application: Application) {
-        if (isEmulator()) warn("Running on an emulator")
-        if (RootBeer(application).isRooted) warn("Root/jailbreak detected")
-        if (Debug.isDebuggerConnected() || Debug.waitingForDebugger()) warn("Debugger attached")
+        if (isEmulator()) warn(AppConstants.RASP_THREAT_EMULATOR)
+        if (RootBeer(application).isRooted) warn(AppConstants.RASP_THREAT_ROOT)
+        if (Debug.isDebuggerConnected() || Debug.waitingForDebugger()) warn(AppConstants.RASP_THREAT_DEBUGGER)
 
         val resolver = application.contentResolver
-        if (Settings.Global.getInt(resolver, Settings.Global.ADB_ENABLED, 0) == 1) {
-            warn("USB debugging (ADB) is enabled")
+        if (Settings.Global.getInt(resolver, Settings.Global.ADB_ENABLED, AppConstants.RASP_SETTING_DISABLED) == AppConstants.RASP_SETTING_ENABLED) {
+            warn(AppConstants.RASP_THREAT_ADB_ENABLED)
         }
-        if (Settings.Global.getInt(resolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) == 1) {
-            warn("Developer mode is enabled")
+        if (Settings.Global.getInt(resolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, AppConstants.RASP_SETTING_DISABLED) == AppConstants.RASP_SETTING_ENABLED) {
+            warn(AppConstants.RASP_THREAT_DEVELOPER_MODE)
         }
     }
 
     private fun isEmulator(): Boolean {
-        return Build.FINGERPRINT.startsWith("generic")
-            || Build.FINGERPRINT.startsWith("unknown")
-            || Build.MODEL.contains("google_sdk")
-            || Build.MODEL.contains("Emulator")
-            || Build.MODEL.contains("Android SDK built for")
-            || Build.MANUFACTURER.contains("Genymotion")
-            || Build.PRODUCT == "google_sdk"
-            || Build.PRODUCT.contains("sdk_gphone")
-            || Build.HARDWARE.contains("goldfish")
-            || Build.HARDWARE.contains("ranchu")
-            || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+        return Build.FINGERPRINT.startsWith(AppConstants.RASP_EMULATOR_GENERIC)
+            || Build.FINGERPRINT.startsWith(AppConstants.RASP_EMULATOR_UNKNOWN)
+            || Build.MODEL.contains(AppConstants.RASP_EMULATOR_GOOGLE_SDK)
+            || Build.MODEL.contains(AppConstants.RASP_EMULATOR_MODEL_EMULATOR)
+            || Build.MODEL.contains(AppConstants.RASP_EMULATOR_MODEL_ANDROID_SDK_BUILT_FOR)
+            || Build.MANUFACTURER.contains(AppConstants.RASP_EMULATOR_GENYMOTION)
+            || Build.PRODUCT == AppConstants.RASP_EMULATOR_GOOGLE_SDK
+            || Build.PRODUCT.contains(AppConstants.RASP_EMULATOR_PRODUCT_SDK_GPHONE)
+            || Build.HARDWARE.contains(AppConstants.RASP_EMULATOR_HARDWARE_GOLDFISH)
+            || Build.HARDWARE.contains(AppConstants.RASP_EMULATOR_HARDWARE_RANCHU)
+            || (Build.BRAND.startsWith(AppConstants.RASP_EMULATOR_GENERIC) && Build.DEVICE.startsWith(AppConstants.RASP_EMULATOR_GENERIC))
     }
 
     private fun warn(message: String) {
-        Log.w(TAG, message)
+        Log.w(AppConstants.RASP_LOG_TAG, message)
         mainHandler.post { reportThreat(message) }
     }
 
@@ -120,7 +113,9 @@ object RaspGuard {
         val activity = currentActivity?.get() ?: return
         if (activity.isFinishing || activity.isDestroyed) return
 
-        val body = activeThreats.joinToString(separator = "\n") { "•  $it" }
+        val body = activeThreats.joinToString(separator = AppConstants.RASP_DIALOG_SEPARATOR) {
+            "${AppConstants.RASP_DIALOG_BULLET}$it"
+        }
         val existing = dialog
         if (existing != null && existing.isShowing) {
             existing.setMessage(body)
@@ -128,10 +123,10 @@ object RaspGuard {
         }
 
         dialog = AlertDialog.Builder(activity)
-            .setTitle("⚠️ Security threat detected")
+            .setTitle(AppConstants.RASP_DIALOG_TITLE)
             .setMessage(body)
             .setCancelable(false)
-            .setPositiveButton("Tutup aplikasi") { _, _ -> closeApp() }
+            .setPositiveButton(AppConstants.RASP_DIALOG_POSITIVE_BUTTON) { _, _ -> closeApp() }
             .create()
             .apply {
                 setCanceledOnTouchOutside(false)
